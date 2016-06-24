@@ -8,6 +8,7 @@ Worker.onMessage = function(message) {
     try {
         // FooHelperFactory 是在 QML 中使用 helper 注册的
         var foo = FooHelperFactory.create();
+        // c++ native method
         i = foo.helper(message.OK);
     } catch(e) {
         console.log(e);
