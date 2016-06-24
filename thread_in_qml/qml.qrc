@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/main.qml</file>
+        <file>qml/thread/first_thread.qml</file>
+        <file>qml/thread/thread_dir_size.qml</file>
+    </qresource>
+</RCC>
