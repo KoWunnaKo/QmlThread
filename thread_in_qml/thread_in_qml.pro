@@ -3,13 +3,9 @@ TEMPLATE = app
 QT += qml quick widgets
 CONFIG += c++11
 
-SOURCES += main.cpp \
-    src/threadconnector.cpp \
-    src/dirsize.cpp
+SOURCES += main.cpp
 
-HEADERS += \
-    src/threadconnector.h \
-    src/dirsize.h
+
 
 RESOURCES += qml.qrc
 
@@ -18,7 +14,5 @@ QML_IMPORT_PATH =
 
 # Default rules for deployment.
 include(deployment.pri)
-
-
-
+include(src/qmlthread.pri)
 

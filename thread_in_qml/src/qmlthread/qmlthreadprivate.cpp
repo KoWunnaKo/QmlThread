@@ -1,44 +1,27 @@
-#include "threadconnector.h"
+#include "qmlthreadprivate_p.h"
+#include "qmlthread.h"
 
-#include <QQmlEngine>
 #include <QQmlComponent>
 #include <QQmlContext>
 #include <QDebug>
 
 namespace qyvlik {
 
-ThreadConnector::ThreadConnector(QObject *parent) :
-    QObject(parent)
-{
-    Worker *worker = new Worker;
 
-    connect(this, &ThreadConnector::sourceChanged, worker, &Worker::doWork);
-    connect(&thread, &QThread::destroyed, worker, &QObject::deleteLater);
+QmlThreadPrivate::QmlThreadPrivate(QObject *parent) :
+    QThread(parent)
+{ }
 
-    connect(worker, &Worker::sendMessage, this, &ThreadConnector::messageReceived);
-    connect(this, &ThreadConnector::sendMessage, worker, &Worker::messageReceived);
-
-    worker->moveToThread(&thread);
-
-    thread.start();
-}
-
-ThreadConnector::~ThreadConnector()
-{
-    thread.quit();
-    thread.wait();
-}
-
-QUrl ThreadConnector::source() const
+QUrl QmlThreadPrivate::source() const
 {
     return m_source;
 }
 
-void ThreadConnector::setSource(const QUrl &newValue)
+void QmlThreadPrivate::setSource(const QUrl &source)
 {
-    if ( newValue != m_source ) {
-        m_source = newValue;
-        emit sourceChanged( m_source );
+    if(source != m_source) {
+        m_source = source;
+        Q_EMIT sourceChanged(m_source);
     }
 }
 
@@ -79,6 +62,7 @@ void Worker::doWork(const QUrl &thread_qml_file)
 }
 
 //--------------------Worker-----------------------
+
 
 } // namespace qyvlik
 

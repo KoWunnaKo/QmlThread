@@ -2,8 +2,8 @@
 #include <QQmlApplicationEngine>
 #include <QtQml>
 
-#include "src/threadconnector.h"
-#include "src/dirsize.h"
+#include <qmlthread/QmlThread>
+#include <utility/dirsize.h>
 
 int main(int argc, char *argv[])
 {
@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 
     // only for xxx.thread.qml
     qmlRegisterType<qyvlik::QmlRunnable>("qyvlik.thread.runnable", 0, 1, "QmlRunnable");
-    qmlRegisterType<qyvlik::ThreadConnector>("qyvlik.thread", 0, 1, "ThreadConnector");
+    qmlRegisterType<qyvlik::QmlThread>("qyvlik.thread", 0, 1, "QmlThread");
 
     qmlRegisterType<qyvlik::DirSize>("qyvlik.utility", 0, 1, "DirSize");
 

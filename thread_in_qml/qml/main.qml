@@ -26,7 +26,7 @@ Window {
         selectFolder: true
         onAccepted: {
             console.log("You chose: " + fileDialog.fileUrl);
-            connector.sendMessage(fileDialog.fileUrl.toString())
+            thread.sendMessage(fileDialog.fileUrl.toString())
         }
     }
 
@@ -35,8 +35,8 @@ Window {
         anchors.centerIn: parent
     }
 
-    ThreadConnector {
-        id: connector
+    QmlThread {
+        id: thread
         source: "./thread/thread_dir_size.qml"
         onMessageReceived: {
             console.log(message.toString())
