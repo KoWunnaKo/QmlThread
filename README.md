@@ -15,8 +15,8 @@ More powerful Thread module in QML.
 线程连接器：
 
 ```
-    ThreadConnector {
-        id: connector
+    Thread {
+        id: thread
         source: "./thread/thread_dir_size.qml"
         onMessageReceived: {
             console.log(message.toString())

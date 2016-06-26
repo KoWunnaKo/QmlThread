@@ -9,10 +9,10 @@ More powerful Thread module in QML.
 ```
     Button {
         text: "dirsize"
-        onClicked: connector.sendMessage("C:/")
+        onClicked: thread.sendMessage("C:/")
     }
-    ThreadConnector {
-        id: connector
+    Thread {
+        id: thread
         source: "./thread/thread_dir_size.qml"
         onMessageReceived: {
             console.log(message.toString())
@@ -46,10 +46,10 @@ QmlRunnable {
 
 ```
 +-------- Main Thread ----------+        +-------------- Thread -------------+
-|  ThreadConnector.sendMessage  |        |                                   |
-|                               |  --->  |  QmlRunnable::onMessageReceived   |
-|                               |  --->  |  dirsize.dirSize(message)         |
-|                               |  <---  |    QmlRunnable::sendMessage       |
-|         console.log(dirsize)  |        |                                   |
+|       Thread.sendMessage      |        |                                   |
+|                               |  --->  |   QmlRunnable.onMessageReceived   |
+|                               |        |  dirsize.dirSize(message)         |
+|                               |  <---  |     QmlRunnable.sendMessage       |
+|    Thread.onMessageReceived   |        |                                   |
 +-------------------------------+        +-----------------------------------+
 ```
