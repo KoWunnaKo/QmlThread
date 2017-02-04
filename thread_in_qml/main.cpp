@@ -2,7 +2,7 @@
 #include <QQmlApplicationEngine>
 #include <QtQml>
 
-#include <qmlthread/QmlThread>
+#include <qmlthread/qmlthread.h>
 #include <utility/dirsize.h>
 
 int main(int argc, char *argv[])

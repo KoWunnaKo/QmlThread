@@ -2,6 +2,7 @@ import QtQuick 2.5
 import QtQuick.Window 2.2
 import QtQuick.Controls 1.4
 import QtQuick.Dialogs 1.2
+
 import qyvlik.thread 0.1
 
 Window {
@@ -26,7 +27,7 @@ Window {
         selectFolder: true
         onAccepted: {
             console.log("You chose: " + fileDialog.fileUrl);
-            thread.sendMessage(fileDialog.fileUrl.toString())
+            var sendResult = thread.sendMessage(fileDialog.fileUrl.toString())
         }
     }
 
@@ -37,11 +38,10 @@ Window {
 
     QmlThread {
         id: thread
-        source: "./thread/thread_dir_size.qml"
+        runnableSource: "./thread/thread_dir_size.qml"
         onMessageReceived: {
             console.log(message.toString())
         }
     }
-
 }
 

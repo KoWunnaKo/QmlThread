@@ -9,7 +9,7 @@ import qyvlik.utility 0.1
 QmlRunnable {
     id: runnable
 
-    property var __: DirSize {
+    readonly property var __: DirSize {
         id: dirsize
     }
 

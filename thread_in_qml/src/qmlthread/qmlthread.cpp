@@ -1,64 +1,128 @@
 #include "qmlthread.h"
-#include "qmlthreadprivate_p.h"
 
 #include <QDebug>
+#include <QThread>
+#include <QtQml>
 
 namespace qyvlik {
 
+Worker::Worker(QObject *parent) :
+    QObject(parent),
+    mEngine(nullptr)
+{
+}
+
+void Worker::doWork(const QUrl &thread_qml_file)
+{
+    if(mEngine == nullptr) {
+        mEngine = new QQmlEngine(this);
+        qmlInfo(mEngine) << tr("thread qml file: ") << thread_qml_file
+                         << tr("current thread id: ")<< QThread::currentThreadId();
+    }
+
+    QQmlComponent component(mEngine, thread_qml_file, QQmlComponent::PreferSynchronous);
+
+    if(component.status() != QQmlComponent::Ready) {
+        qmlInfo(&component) << component.errors();
+        return;
+    }
+
+    QObject *myObject = component.create();
+
+    QmlRunnable *runnable = qobject_cast<QmlRunnable*>(myObject);
+    if(runnable == nullptr) {
+        qmlInfo(myObject) << tr("qml file is not QmlRunnable") << component.errors();
+        myObject->deleteLater();
+        return;
+    }
+
+    QQmlEngine::setObjectOwnership(runnable, QQmlEngine::JavaScriptOwnership);
+
+    connect(this, &Worker::messageReceived, runnable, &QmlRunnable::messageReceived);
+    connect(runnable, &QmlRunnable::sendMessage, this, &Worker::sendMessage);
+}
+
+
+QmlRunnable::QmlRunnable(QObject *parent) :
+    QObject(parent)
+{}
+
+void QmlRunnable::classBegin()
+{
+    QThread* mainThread = QCoreApplication::instance()->thread();
+    QThread* currentThread = QThread::currentThread();
+
+    if(mainThread == currentThread) {
+
+        qmlInfo(this) << "mainThread: " << (void*)mainThread
+                      << "currentThread: " << (void*)currentThread;
+        // abort();
+    }
+}
+
+void QmlRunnable::componentComplete()
+{
+}
+
+
+class QmlThreadPrivate
+{
+public:
+    QmlThreadPrivate(QThread* thread, Worker* worker):
+        mThread(thread),
+        mWorker(worker)
+    {}
+    QThread* mThread;
+    Worker* mWorker;
+    QUrl mRunnableSource;
+};
+
 QmlThread::QmlThread(QObject *parent) :
     QObject(parent),
-    d_ptr(new QmlThreadPrivate(this))
+    d_ptr(new QmlThreadPrivate(new QThread(this), new Worker))
 {
-    connect( d_ptr, &QmlThreadPrivate::sourceChanged, this, &QmlThread::sourceChanged );
-    connect( d_ptr, &QmlThreadPrivate::messageReceived, this, &QmlThread::messageReceived );
 
-    Worker *worker = new Worker;
+    d_ptr->mWorker->moveToThread(d_ptr->mThread);
 
-    connect(d_ptr, &QmlThreadPrivate::sourceChanged, worker, &Worker::doWork);
-    connect(d_ptr, &QThread::destroyed, worker, &QObject::deleteLater);
+    connect(this, &QmlThread::runnableSourceChanged, d_ptr->mWorker, &Worker::doWork);
+    connect(d_ptr->mThread, &QThread::destroyed, d_ptr->mWorker, &QObject::deleteLater);
 
-    connect( d_ptr, &QmlThreadPrivate::sendMessage, worker, &Worker::messageReceived );
-    connect( worker, &Worker::sendMessage, d_ptr, &QmlThreadPrivate::messageReceived);
+    connect(d_ptr->mWorker, &Worker::sendMessage, this, &QmlThread::messageReceived);
 
-    worker->moveToThread(d_ptr);
-
-    d_ptr->start();
+    d_ptr->mThread->start();
 }
 
 QmlThread::~QmlThread()
 {
-    d_ptr->quit();
-    d_ptr->wait();
+    d_ptr->mThread->quit();
+    d_ptr->mThread->wait();
+    delete d_ptr;
 }
 
-bool QmlThread::sendMessage(QJsonValue message)
+bool QmlThread::sendMessage(const QJsonValue& message)
 {
-    if(d_ptr->isRunning()) {
-
-        Q_EMIT d_ptr->sendMessage(message);
-
-        return true;
-    } else {
+    if(!d_ptr->mThread->isRunning()) {
+        qmlInfo(d_ptr->mWorker) << "thread is running";
         return false;
     }
+
+    Q_EMIT d_ptr->mWorker->messageReceived(message);
+
+    return true;
 }
 
-QUrl QmlThread::source() const
+QUrl QmlThread::runnableSource() const
 {
-    return d_ptr->source();
+    return d_ptr->mRunnableSource;
 }
 
-void QmlThread::setSource(const QUrl &newValue)
+void QmlThread::setRunnableSource(const QUrl &newValue)
 {
-    d_ptr->setSource(newValue);
+    if(d_ptr->mRunnableSource != newValue) {
+        d_ptr->mRunnableSource = newValue;
+        Q_EMIT runnableSourceChanged(d_ptr->mRunnableSource);
+    }
 }
-
-
-
-
-
-
-
 
 
 
